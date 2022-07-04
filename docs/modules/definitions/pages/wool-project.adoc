@@ -7,12 +7,37 @@
 Harm op den Akker <hopdenakker@innovationsprint.eu>
 :description: Documentation about the "WOOL Project", a way to organise various WOOL scripts.
 
-A single .wool script might be all you need for your WOOL Powered application. But once the content offered by your virtual agents is expanding, it becomes important to split your work into several scripts. Additionally, you might want to make your dialogue content available to users that speak different languages.
+A single .wool script might be all you need for your WOOL Powered application. But once the content offered by your virtual agents is expanding, it becomes important to split your work into several scripts. Additionally, you might want to make your dialogue content available to users that speak different languages, so you will need "translation files" (.json files) to accompany your dialogues.
 
-Defining a "WOOL Project" is the way to organize your various WOOL scripts and various translations into a single manageable collection.
+Defining a "WOOL Project" is the way to organize your various WOOL scripts and various translation files into a single manageable collection.
 
-== Basics & Terms
-A WOOL dialogue definition is essentially a definition of a series of dialogue steps (that we refer to as nodes) linked together through user replies.
+== Basic WOOL Project
+The most basic version of a WOOL project is a (root) folder that contains .wool scripts. When the root folder contains subfolders, those subfolders are considered to be different languages. Within those language folders, additional arbitrary folder structures may be used to structure your set of .wool script and .json translation files.
+
+== Concepts in a WOOL Project
+Without going into the question of how to store this information, we first describe all the conceptual parts of a WOOL Project.
+
+=== Basic Metadata
+A WOOL Project should define the following basic metadata elements:
+
+* Name - A WOOL Project has a name, which can be any string up to a length of 255 characters.
+* Version - A WOOL Project has a version, which can be any string up to a length of 255 characters.
+* Description - A WOOL Project has a description, which can be any string of any length.
+
+NOTE: The limit on the number of characters that may be used to describe e.g. the project's name and version is there to ensure compatibility between WOOL Projects that are stored as files vs WOOL Projects stored in e.g. a relational database.
+
+=== Language Map Metadata
+A WOOL Project should define the set of languages for which content is available by declaring a *Language Map*.
+
+A *Language Map* consists of 1 or more *Language Sets*.
+
+A *Language Set* consists of exactly 1 *Source Language* and 0 or more *Translation Languages*.
+
+Both a *Source Language* and a *Translation Language* are defined by a *name* and and a *code*.
+
+
+image::wool-project-language-map.png[]
+
 
 == WOOL Project Metadata file
 When working with local WOOL projects ...

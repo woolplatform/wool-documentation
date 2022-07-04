@@ -119,15 +119,15 @@ Only authenticated users can access the WOOL Web Service API. The usernames and 
 
 An example users.xml file can be found in `<GITDIR>\wool\java\WoolWebService\config\users.xml`. Change the default user and password, or add any additional users as you see fit.
 
-== Configuring an external variable service. 
+== Configuring an external variable service.
 
-The use of an external variable service can be turned on by setting `woolconfigExternalVariableServiceEnabled` to 'true'. 
+The use of an external variable service can be enabled by setting `woolconfigExternalVariableServiceEnabled` to `true`.
 
-If this setting is set to `true`, the following also need to be configured: 
+If this setting is set to `true`, the following also need to be configured:
 
 * `woolconfigExternalVariableServiceUrl` should point to where the external variable service can be called (e.g., `https://servlets.example.com/wool-external-var-service`).
 * `woolconfigExternalVariableServiceAPIVersion` should be set to the API version for the external variable service (e.g., `1.0.0`).
-* `woolconfigExternalVariableServiceApiToken` can be set to an API token if the external service requires authentication. 
+* `woolconfigExternalVariableServiceApiToken` can be set to an API token if the external service requires authentication (currently not supported yet).
 
 == Deploying the Web Service
 NOTE: Make sure that Tomcat is running before proceeding with this step.
