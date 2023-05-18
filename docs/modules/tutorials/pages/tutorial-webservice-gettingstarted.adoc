@@ -1,0 +1,337 @@
+= Tutorial: WOOL Web Service - Getting Started
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Harm op den Akker <hopdenakker@innovationsprint.eu>
+Tessa Beinema <t.c.beinema@utwente.nl>
+:description: A tutorial for getting started with using the WOOL Web Service.
+
+NOTE: This tutorial was last updated on *December 28th, 2021*.
+
+The WOOL Web Service is a https://spring.io/projects/spring-boot[JAVA Spring Boot Application] that can be deployed as a web service. It acts as a wrapper around the WOOL Core Library, offering an API that allows you to create client-server dialogue applications.
+
+This tutorial assumes that you've successfully installed the WOOL Web Service, e.g. by following the xref:tutorial-webservice-installation.adoc[Tutorial: WOOL Web Service - Installation].
+
+== Exploring the API
+To get started, open a web browser and navigate to your local WOOL Web Service deployment (e.g. `http://localhost:8080/wool`). You should see something like the image below:
+
+.If deployed correctly, this is what you should be seeing - the Swagger API Documentation of the WOOL Web Service.
+image::webservice-setup-tutorial-1-swagger.png[]
+
+=== Authenticating
+All API calls are secured and require a valid `X-Auth-Token` to be included in the header of each call. In order to obtain such a token, we must first perform a login.
+
+When installing the WOOL Web Service you have indicated the `woolconfigDataDir`, which is where all configuration and log files are stored. In this folder, you will find a file `users.xml` in which all valid username/password/role combinations are stored. For the purpose of this tutorial, let's add a test user to this file, like so:
+
+ <users>
+   <user username="user@example.com" password="p4ssw0rd" role="user" />
+   <user username="admin@example.com" password="super-secure-password-123" role="admin" />
+ </users>
+
+Note that you can edit this `users.xml` file while the WOOL Web Service is running, there is no need to re-launch or re-deploy the service.
+
+Next, open the Swagger page and follow these steps:
+
+* Click on *auth-controller* to unfold the set of API end-points related to authentication.
+* Click on the */auth/login* end-point to unfold its details.
+* Click on the "Try it out" button in the top right corner of this end-point view.
+* Under `loginParams` fill in the following information:
+
+ {
+   "password": "p4ssw0rd",
+   "tokenExpiration": null,
+   "user": "user@example.com"
+ }
+
+* Then, click on *Execute* in the bottom left of the view.
+* Under "Server response", you should see a Code of 200, and a response body that looks like this:
+
+ {
+   "user": "user@example.com",
+   "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0IiwiaWF0IjoxNjM3MDY4MDk2fQ.62zcI64ZU12piR-73Sn-chbkjblbn9AqXHIic8UFh1SlSMa7p3Aeha_x51rWMllh6Ch_cYwaiXjv-8enmgX0ag"
+ }
+
+* The *token* value is our Authentication token that will never expire (because we set `tokenExpiration` to `null`). Copy this to your clipboard.
+* Scroll all the way to the top of the page and find in the top right corner the green button "Authorize".
+* Enter the authentication token here and click *Authorize* (and then *Close*).
+
+NOTE: We are now authenticated as a regular user (instead of an admin user) and can start exploring the rest of the API. If we were to authenticate as a user with the "admin" role, we would be able to specify an additional _woolUserId_ parameter for each API call. You can use this if you want to communicate with the WOOL Web Service e.g. from one trusted server, which in turns serves multiple "real" end-users.
+
+=== Summary of API End-Points
+Before we can start building our own software client that can communicate with the WOOL Web Service, we will explore the functionalities of the API using the Swagger controller.
+
+* Unfold the `dialogue-controller` to reveal the following end-points:
+** */dialogue/back-dialogue* - This will cause the dialogue to go one step back.
+** */dialogue/cancel-dialogue* - This will cancel an ongoing dialogue, discarding its current state.
+** */dialogue/current-dialogue* - For a given `dialogueName`, provides all relevant information on the current state of that ongoing dialogue.
+** */dialogue/progress-dialogue* - Progresses the dialogue a step forward by providing a specific `replyId`.
+** */dialogue/start-dialogue* - Starts the interaction between user and system for a specific dialogue.
+
+The execution of a WOOL dialogue between a client and the WOOL Web Service is thus a series of API calls, starting with *start-dialogue*, followed by a series of *progress-dialogue* (and optionally *back-dialogue*) calls, that either ends with a call to *cancel-dialogue* or ends by the dialogue naturally ending.
+
+== Running a basic dialogue
+We are going to walk through all the possible steps in a client-server WOOL application. As an example, we will be using the `basic.wool` dialogue which is included in the default set of dialogues available to the WOOL Web Service. If you haven't configured the WOOL Web Service to serve a different set of dialogues, this should be available. The `basic.wool` dialogue is a very simple dialogue with 9 nodes that demonstrates how dialogues start, progress and end. The structure of the dialogue can be seen in the image below:
+
+.The 'basic.wool' dialogue as shown in the WOOL Editor (Web v1.10.3).
+image::webservice-gettingstarted-basicdialogue.png[]
+
+In the steps below, we're going to show the series of API calls a client might take to execute this dialogue step-by-step:
+
+=== The beginning (start-dialogue)
+
+* Unfold the */dialogue/start-dialogue* endpoint and click on "_Try it out_". There are four parameters that can be entered at this point:
+** `dialogueName` - The name of the dialogue that we want to start, this should be "*basic*", since we want to start the dialogue in `basic.wool`.
+** `language` - For now we choose "*en*", and we deal with translations later.
+** (optional) `time` - The current time, formatted as e.g. 2021-12-06T12:00:00.000. Time info is used for logging purposes.
+** (optional) `timezone` - The current timezone as a location-based identifier from the tz database. For example Europe/Amsterdam.
+** (optional) `woolUserId` - If authenticated as an "admin" user, use this to specify the "real" end-user for which to start the dialogue.
+* When you've filled in "*basic*" as `dialogueName` and "*en*" as `language` you can click "_Execute_", resulting in the following JSON Response:
+
+.Code Block: JSON Response #1.
+```json
+{
+  "dialogue": "basic",
+  "node": "Start",
+  "loggedDialogueId": "LOGGED_DIALOGUE_ID",
+  "loggedInteractionIndex": 0,
+  "speaker": "Bob",
+  "statement": {
+    "segments": [
+      {
+        "segmentType": "TEXT",
+        "text": "Hi, my name is Bob, and this is the Default WOOL Test dialogue."
+      }
+    ]
+  },
+  "replies": [
+    {
+      "replyId": 1,
+      "statement": {
+        "segments": [
+          {
+            "segmentType": "TEXT",
+            "text": "Nice to meet you Bob."
+          }
+        ]
+      },
+      "actions": [],
+      "endsDialogue": false
+    },
+    {
+      "replyId": 2,
+      "statement": {
+        "segments": [
+          {
+            "segmentType": "TEXT",
+            "text": "Goodbye."
+          }
+        ]
+      },
+      "actions": [],
+      "endsDialogue": true
+    }
+  ]
+}
+```
+
+When you are building a Client application, you need to extract this JSON response and construct your user interface around it. For now, it suffices to understand that this JSON response contains the `speaker` ("Bob"), the `statement` ("_Hi, my name is Bob, and this is the default WOOL Test dialogue._") and two `reply` options: (1) "_Nice to meet you Bob._", or (2) "_Goodbye._". Furthermore, the JSON response contains some meta information that we will need to progress the dialogue: the `loggedDialogueId` (e.g. 11adab85293d4d418aaba51917eff76e) and the `loggedInteractionIndex` (0).
+
+=== Selecting a reply (progress-dialogue)
+
+* Next, we want to advance the dialogue by sending the reply "_Nice to meet you Bob._". For this we will unfold the */dialogue/progress-dialogue* end-point, and click on "_Try it out_". Besides the optional `time`, `timezone`, and `woolUserId` variables explained earlier, there are three parameters for this call:
+** `loggedDialogueId` - This is the identifier of the current dialogue instance that you've obtained from the previous call to start-dialogue progress-dialogue or back-dialogue. We fill in the value obtained earlier: *LOGGED_DIALOGUE_ID*.
+** `loggedInteractionIndex` - This is the index of the current interaction in the dialogue, as obtained in the previous call. We fill in: *0*.
+** `replyId` - The ID of the selected reply. Since we want to say "_Nice to meet you Bob._", we fill in *1* (note that the first `replyId` is "1" and not "0" as is common in listings).
+* When you've filled in everything you can click "_Execute_", resulting in the following JSON Response:
+
+.Code Block: JSON Response #2.
+```json
+{
+  "value": {
+    "dialogue": "basic",
+    "node": "Continue",
+    "loggedDialogueId": "LOGGED_DIALOGUE_ID",
+    "loggedInteractionIndex": 2,
+    "speaker": "Bob",
+    "statement": {
+      "segments": [
+        {
+          "segmentType": "TEXT",
+          "text": "This dialogue is very basic, and shows only dialogue flow and ending."
+        }
+      ]
+    },
+    "replies": [
+      {
+        "replyId": 1,
+        "statement": null,
+        "actions": [],
+        "endsDialogue": false
+      }
+    ]
+  }
+}
+```
+This response is very similar to the previous one (JSON Response #1). The notable difference is that there is only 1 `reply` option, and its `statement` field is empty (`null`). This is what is called an "_Auto-forward Reply_" (see the xref:definitions:wool-language.adoc[WOOL Language] doc page), and the idea is that the dialogue can "automatically move forward" after some time, or after the user pressed a button (e.g. "Continue").
+
+=== Auto-Forward (progress-dialogue)
+
+* Make an additional call to the */dialogue/progress-dialogue* end-point with `loggedDialogueId: LOGGED_DIALOGUE_ID`, `loggedInteractionIndex: 2`, and `replyId: 1`. We will get the following response:
+
+.Code Block: JSON Response #3.
+```json
+{
+  "value": {
+    "dialogue": "basic",
+    "node": "DialogueMenu",
+    "loggedDialogueId": "LOGGED_DIALOGUE_ID",
+    "loggedInteractionIndex": 4,
+    "speaker": "Bob",
+    "statement": {
+      "segments": [
+        {
+          "segmentType": "TEXT",
+          "text": "We deal with statements, reply options, and ending dialogues."
+        }
+      ]
+    },
+    "replies": [
+      {
+        "replyId": 1,
+        "statement": {
+          "segments": [
+            {
+              "segmentType": "TEXT",
+              "text": "Tell me about statements."
+            }
+          ]
+        },
+        "actions": [],
+        "endsDialogue": false
+      },
+      {
+        "replyId": 2,
+        "statement": {
+          "segments": [
+            {
+              "segmentType": "TEXT",
+              "text": "Reply Options?"
+            }
+          ]
+        },
+        "actions": [],
+        "endsDialogue": false
+      },
+      {
+        "replyId": 3,
+        "statement": {
+          "segments": [
+            {
+              "segmentType": "TEXT",
+              "text": "How do you end a dialogue?"
+            }
+          ]
+        },
+        "actions": [],
+        "endsDialogue": false
+      }
+    ]
+  }
+}
+```
+=== Taking a step back (back-dialogue)
+The structure of this response doesn't contain anything we haven't seen before. So, we take the opportunity to look at the */dialogue/back-dialogue* end-point. Let's assume our previous "Auto-forward Reply" automatically advanced the dialogue, but it went a bit too quick for the liking of our end-user. In that case, a UI designer could offer a "Back" button, that, when pressed calls the */dialogue/back-dialogue* end-point.
+
+* Unfold the */dialogue/back-dialogue* end-point and click on "_Try it out_".
+* Fill in the `loggedDialogueId` as `LOGGED_DIALOGUE_ID` and `loggedInteractionIndex` as `4` and press "_Execute_".
+
+The response that you will get, will be exactly the same as in the previous step (JSON Response #2). Essentially, the WOOL Web Service looks up the previously returned result and will return it again. If there is no previous step, it would just return the current step.
+
+=== Fast-forward... (progress-dialogue)
+From here, we will fast forward to a point in the conversation dealing with _ending dialogues_.
+
+* Make a call to the */dialogue/progress-dialogue* end-point with `loggedDialogueId: LOGGED_DIALOGUE_ID`, `loggedInteractionIndex: 2`, and `replyId: 1`.
+* Make another call to the */dialogue/progress-dialogue* end-point with `loggedDialogueId: LOGGED_DIALOGUE_ID`, `loggedInteractionIndex: 6`, and `replyId: 3`.
+* Make another call to the */dialogue/progress-dialogue* end-point with `loggedDialogueId: LOGGED_DIALOGUE_ID`, `loggedInteractionIndex: 8`, and `replyId: 1`.
+
+You will get the following JSON Response:
+
+.Code Block: JSON Response #4.
+```json
+{
+  "value": {
+    "dialogue": "basic",
+    "node": "DialogueEnding2",
+    "loggedDialogueId": "LOGGED_DIALOGUE_ID",
+    "loggedInteractionIndex": 10,
+    "speaker": "Bob",
+    "statement": {
+      "segments": [
+        {
+          "segmentType": "TEXT",
+          "text": "Alternatively, a reply option can point to the reserved node name \"End\". When the dialogue reaches this node, the dialogue is also over."
+        }
+      ]
+    },
+    "replies": [
+      {
+        "replyId": 1,
+        "statement": {
+          "segments": [
+            {
+              "segmentType": "TEXT",
+              "text": "This reply option points to the \"End\" node."
+            }
+          ]
+        },
+        "actions": [],
+        "endsDialogue": true
+      },
+      {
+        "replyId": 2,
+        "statement": {
+          "segments": [
+            {
+              "segmentType": "TEXT",
+              "text": "This one points to a node without replies."
+            }
+          ]
+        },
+        "actions": [],
+        "endsDialogue": false
+      }
+    ]
+  }
+}
+```
+Note that from the 2 `reply` options, the first one ("_This reply option points to the \"End\" node._") has the additional parameter `endsDialogue` set to `true`. When building a User Interface, you use this information in two ways. First, when the user selects this option, you don't have to wait for a response from the server (as we will see soon). Second, you might wish to indicate to the user that selecting this reply option will end the conversation, for example by adding an "Exit Icon" to the reply button.
+
+=== Recovering state (current-dialogue)
+But before we continue the conversation, we take a look at the */dialogue/current-dialogue* end-point. If for whatever reason, you have lost the current "state" of your user interface (e.g. the user logged out, the browser was closed, or your application has crashed - it happens!), you can use this end-point to retrieve the latest state of _a given dialogue_. So, if you know you your user was interacting with the *basic.wool* dialogue, but you've lost track of where you were, you can call the following:
+
+* */dialogue/current-dialogue* with `dialogueName` as `basic`.
+
+This call will return exactly the current state of the conversation, which is the same output as JSON Response #4 above.
+
+=== Ending the dialogue (progress-dialogue)
+Now it's time for our final move; we want to end the dialogue by selecting the `Reply` "_This reply option points to the End node._". To do this, we make the following call:
+
+* */dialogue/progress-dialogue* with `loggedDialogueId: LOGGED_DIALOGUE_ID`, `loggedInteractionIndex: 10`, and `replyId: 1`.
+
+As this is the end of the dialogue, the response will not contain anything useful. To be exact, this is what you can expect the WOOL Web Service to return:
+
+.Code Block: JSON Response #5.
+```json
+{
+  "value": null
+}
+```
+
+== What's next?
+So now you have a running WOOL Web Service, and you understand how you can use its API as a "Client" to execute a simple WOOL dialogue.
+
+The next tutorial in this series is currently being written...
+
+NOTE: If you found errors or have questions about this tutorial, please consider reporting an issue at https://github.com/woolplatform/wool-documentation or sending an email to info@woolplatform.eu.

@@ -1,0 +1,25 @@
+= WOOL Tutorials
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Harm op den Akker <hopdenakker@innovationsprint.eu>
+:description: The document's description.
+
+On this page we list tutorials that are available for the WOOL Platform.
+
+== WOOL Editor Tutorials
+Below you will find a list of tutorials related to using the WOOL Editor.
+
+ * xref:tutorial-author-first-wool-dialogue.adoc[How to author your first WOOL dialogue] — Beginner tutorial that explains how to create a new WOOL project and write your first dialogue.
+ * xref:tutorial-interactive-fiction-game.adoc[How to make a standalone interactive fiction game] — A simple introduction to using the WOOL Editor, focused on creating your own interactive fiction game.
+
+== Java Tutorials
+Below you will find a list of tutorials on using WOOL in your Java project.
+
+ * xref:tutorial-setup-wool-java.adoc[Setting up WOOL for your Java project] — Beginner tutorial on setting up a simple Java project in IntelliJ and using your first WOOL functions.
+
+== WOOL Web Service Tutorials
+ * xref:tutorial-webservice-installation.adoc[WOOL Web Service - Installation] — Beginner tutorial that explains how to configure and deploy the WOOL Web Service on a local Tomcat server.
+ * xref:tutorial-webservice-gettingstarted.adoc[WOOL Web Service - Getting Started] - Your first steps in using the WOOL Web Service to create a client-server based WOOL application.

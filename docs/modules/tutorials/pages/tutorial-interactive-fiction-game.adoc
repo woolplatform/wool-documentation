@@ -1,0 +1,107 @@
+= Tutorial: How to make a standalone interactive fiction game
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Boris van Schooten <b.vanschooten@rrd.nl>
+:description: The document's description.
+
+This tutorial describes how to make a simple standalone interactive fiction game. You can use http://www.woolplatform.eu/editor/wooleditor/app/[the web-based Wool editor].
+
+_NOTE: for more complex applications involving a Java server or a custom dialogue client, the desktop Wool editor is recommended. It has file management and multi-dialogue support._
+
+
+== Using the editor
+
+https://www.woolplatform.eu/editor/wooleditor/[You can find the web-based editor here.]
+
+The editor starts with a single Start node. You can click on the node and start editing it.
+
+image::interactive-fiction-wooleditor.png[]
+
+First, you have to fill in the Speaker field. This is used when in a dialogue with a character in your story.  If you do not want a dialogue, but want to describe a location with associated actions from the player, fill in +Narrator+.
+
+The Wool language supports multiple choice actions, text input, variables, and conditionals. For a full specification, see the xref:definitions:wool-language.adoc[WOOL Language Documentation].
+
+The editor also supports HTML tags in the text, for example you can use <p> for a paragraph break or <b> ... </b> for boldface text.
+
+Using +File->Open+, you can open +.wool+ files from your local drive. Download the file below and open it.
+
+link:../attachments/interactive-fiction-if-example.wool[Example Wool file: a simple game called "The Gnome".]
+
+Your editor should look like this:
+
+image::interactive-fiction-wooleditor-overview.jpg[]
+
+Note that the nodes all have different colours. Change the colours using the arrows that appear when hovering over a node. Each colour can be mapped to a different background, once we are in the dialogue viewer.
+
+
+== Creating the game
+
+Now, let's look at some code. Here is the +Start+ node:
+
+[source,txt]
+----
+You are on a road that leads east to the woods and west to a small town.
+
+[[Go East|Woods]]
+[[Go West|Town]]
+----
+
+Note that the speaker is +Narrator+, which indicates this is a location and not a dialogue. The lines between double brackets indicate options for the player. The left hand side is the text to show, the right hand side is the name of a node. Other, more complex options are also possible.
+
+Let's look at the +Innkeeper+ dialogue:
+[source,txt]
+----
+Hello, how may I be of service?
+
+[[One coffee, please.|InnkeeperCoffee]]
+[[A cup of tea, please.|InnkeeperTea]]
+----
+
+The format is exactly the same as for the +Start+ node, but because we filled in a speaker, we now get a dialogue with an avatar. Here's the +InnkeeperCoffee+ node:
+[source,txt]
+----
+Here you go, one cup of hot coffee!
+
+[[Thank you.|Inn|<<set $hasCoffee=true>>]]
+----
+
+Here, we set a variable +$hasCoffee+ as a side effect to an option. Now, we can do something with the variable later on. Note that variables always start with a +$+. This makes it possible to use them in the text, like in +Hello, $playerName+.
+
+In our game, we encounter a gnome. Here is part of the dialogue:
+[source,txt]
+----
+All alone in the woods? Do you have something for me?
+
+[[I don't know what you are talking about!|Woods]]
+
+<<if $hasCoffee>>
+    [[I have a coffee.|GnomeCoffee]]
+<<endif>>
+
+<<if $hasTea>>
+    [[I have tea.|GnomeTea]]
+<<endif>>
+----
+
+You can surround any part of the code with an +if...endif+ condition. The +else+ and +elseif+ are also supported.
+
+
+== Running the game
+
+Now, let's try and run the game. Press "Run".
+
+image::interactive-fiction-woolviewer.jpg[]
+
+Within the Wool viewer, you can edit the graphical appearance of your game. The control panel at the bottom left can be used to change the current background, and avatar if there is a speaker defined.  Use "+" and "-" to cycle through the options.  A number of presets are defined.  Use "URL" to enter a new image URL. The trashcan button can be used to delete previously entered image URLs.  The viewer will remember you choice of avatar for each speaker, and your choice of background for each node colour.
+
+When you are happy with the looks, you can export your game using the "Get URL" button. You will see a (huge) URL that encodes both your source code and the graphical configuration. Note that some browsers have a 4Kb limit on URL size (Internet Explorer) though bigger URLs will work fine in Chrome or Firefox.
+There are also buttons for going back to the editor, and editing the current node.  Note it's also possible to edit the dialogue and then continue it from where it left off.
+Within the editor you can save your Wool file, but saving the graphics is still a bit primitive. You can use the result of "Get URL" to save the graphical configuration. In particular the URL parameter +config=.....+ can be copy/pasted into the viewer URL to copy it into another game.
+
+Another useful Wool viewer URL parameter is +resetconfig+. If you add +&resetconfig=true+ to the end of the URL, the graphical configuration is reset to its default state.
+
+
+Finally, here is the URL to the Gnome game with some custom graphics: http://www.woolplatform.eu/editor/simplewoolclient/index.html?config=Alb8E0zV37G-TvoOxnof9oznwlgU8EmF_DX3oHXVgnwHuEuAX-qrpiwHjEqExE4EgFoOgU4oEwoAqDpOJlIxKpEJUJsI5Fh5BEJKJmIpEJOJVJNJWJXh6AMCFCTIPJMJPJEJXJO56BOE4gAFJED6CxIxIxJ5JNOggAENYDaYC5JpI5IxJMOooBjBhJRCLBJEJNJORHIHJOJFJLpJZJIpIxJ7AqBhJpJpIxJpJRCIpJGGYOIFJHJOJMJNJSwJB56sgzhnwUdugzO3pU3hUf3xnwF0FNXliN-oGswNmFf0wHFddWkkAly6iPeE0Yk5hrOnqNGqNFNOcO854uorEeng14yuEF2yFet5wHrnoHXPkFfvxQUPMSM0yg_E4EhpN14NGnqWG9hFMlfGv5j34DOlwGsGNuwyHsg4GoQG2kIM8xEtwFEPVug2w6g74-FHnoMvqpyhoggyjgj4jz4fEF_vYEn2oY92Yl55Vf1IEfGlh4NmIVv6qUHGE3wxh1FxloiFvCUMXUvogB1Fq8EwqNx8r0gt4owPFEX7G4_HH48FlG-G8gppMpEugjHGsoxG0jyhJvok4dFlYRlgHdnZcLg-4N9EUnwQgd3wGow4yrBr7qDmoCsSXlgygxE-yy4zFEFXGH1g6UUFkIiEzFhV0ggiI5Gfv5EXd88CobGeek1Cq7G3yz51FMC2hriwxoEUlghUoUl4WkIfetx55EHt56F0w6UWX0gkcpxqlcox3XOP3y6qHeeniGcnwzFf45EwwFzF-hPVtoAGPVMfoGEJ76FWXHVFF254ihGt5jqhpHMWpgV2p1XEtouXNeNliq3XPP8gHv4p3d4UHsgV9SM0-KUnoZPvgVWM9Y24F4ohleOEdNNQxq40EyFGwJjZ38DEpgwFNFFrgkfoUNhH65jpow5FfPthU0ItwOu4eoeFFnphWeWU-qoXhHuE4h3HOlw0gh_X-5oNF106sga-vE-F8hEi1elH34Nd8GOp_ctEsqGd&code=A0jloOmE2EvI86E_E_7xcOH2pnwk4C-yHvEk6E9Ev4VMwXvwGdWM3EP3hu4HnxjxNlxA-wN0qxGuixGH-EH4HtwH35zqOl4FcMP3jomANPVY1CVgRN3FoiuggBlxwgM1CjwGGoIZ9hA2EErEcY1yB2iowsQCNvFhMfRF3wWkyhpes6fMwMiR3E-qovAtjOE8H6WrI-pl4w7Gtgi5V8ozgCz4lJEU3wejPHnpO95EmxMmI-q5iH4twwPFqVu4Eg8CFzQliz4NUJncA3HDsNBHB8M5GGPtBsFA9cxPlB-cgdovxB3fG3EV_KoMG2qngE95FtxiFU9ERKA_GUFExtIMHmI-hhziGoooMG34mgWhtFqGdwuFyP0wC2f6XhEOotFB9Hggz2htpAuMF4vhB1N42gyV8y4En4NFk41wPgfAkHNwkzoJv4oImdB2HN40z4sQdHNgvMwF3Lhv5pNJ33gHswG-gkhEmhEnoB9yhFxFuozI1lBmJp-A14Eo8CpeFEnFqogXthE1yKViNGniIpEGsmpw4FUGk2BF0NE62zIm3pAtsBo9OCkk4Cv_xx_wXF9Ho_NP8orEnMuw_48oEiywG5jNdoN4VCF2WoL7uqN9YtvAvzPtUGIdGs6GBVhPVpNd4Fy9PGsUxlW5vxsSMWuAlvCfyE4mWXcpivhlI-1So0U1xGspPmgEtBtWiUglDfFHiGEWRykWI82S9Q9As0avi_BVcNF_An8B4sWhUmFu6rxT1FPEOkE8h6xxp8oH4mXfMHzN4-Ufsoc2A8lrwMg_cppR6Fr4e4ldGPuy8A2t7445A3urrk6NovEtxMdVf4tVrGctrG5MmV2z4NmoHvwy9xNgEdyVq3AHuggoHoyNHWlNO34kqPu4WW3qHh2VgV40OgAkuApzHeij_RutAnNwTgKuXgAX0o_QvuEptL-uEompPtE3yHxEXIutEzMVH6oAmnD48ip2IseEvC-ooMS8uIMlJ1uAwmfoRvpNloHfsQ_E7h8iA-tEydwlAw2cAvDjppE1zwG5nQXi0mohKusECmur4mwuA0lFA0_EposBv0YlOF_p7ZNlxH_xM4ntwhRDnuFcPRmT08S5nuwBn1FGg05oUw0Xfw3Enw24VvhF3F1HmP-EnUoExH53uw4sqUE_qKfrMEMkIl3Co0IolWSuU1FpEEGlpiGloyhEMlRE-pCttoVHbumFiF4WjZOMff5udD8sEGvOzW4mnwp6CsEiEE0UFM5PfVOhumAOMk4cAu1Fjf3qhpAturhsyWdglGWw3vgC10jzv4WnP1oGkqHkpvB8nGNlG1F4s1o2Am3Kgv3owuA0-GmA8-zA_kH3A-3EHnVo_EN0wnE04Mm4j-Tw3Oo_EzwIaNFO1HlsYsuEnwGAs4G48F3V415ylE3gxV0vgHvEekF62G6[Click here to Play "The Gnome"]

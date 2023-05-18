@@ -1,0 +1,173 @@
+= Tutorial: WOOL Web Service - Installation
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Tessa Beinema <t.c.beinema@utwente.nl>
+Harm op den Akker <hopdenakker@innovationsprint.eu>
+:description: A tutorial for installing the WOOL Web Service.
+
+NOTE: This tutorial was last updated on *February 16, 2023*.
+
+The WOOL Web Service is a https://spring.io/projects/spring-boot[JAVA Spring Boot Application] that can be deployed as a web service. It acts as a wrapper around the WOOL Core Library, offering an API that allows you to create client-server dialogue applications.
+
+In this tutorial you will learn how to set up the WOOL Web Service on a local machine with, allowing you to authenticate with your own user account and serving your own set of dialogues.
+
+This tutorial is based on the https://github.com/woolplatform/wool/releases/tag/v1.3.2[v1.3.2] release of the WOOL Platform.
+
+== Prerequisites
+Before you get started, make sure you have the following tools installed:
+
+ * Java (OpenJDK 17+)
+ * Apache Tomcat 10
+
+Below we explain how to set up Java and Tomcat. If you're already have these tools, you can <<Download and Configure,skip ahead to the "Download and Configure" step>>.
+
+=== Java
+The WOOL Web Service, and other WOOL Java software is built using Java 17. Any JDK that supports Java 17 should work. For this tutorial, we assume to use https://jdk.java.net/archive/[OpenJDK 19].
+
+==== Windows
+* Download the ZIP file of the latest version of the Java OpenJDK from the https://jdk.java.net/archive/[Archived OpenJDK General-Availability Releases] page.
+* Extract the .zip archive and move it to somewhere easy to locate, e.g.: `+C:\apps\jdk-19.0.1+`
+* Set an Environment Variable JAVA_HOME to this directory (e.g. `+C:\apps\jdk-19.0.1+`).
+* Add the bin directory to your path (e.g. `+C:\apps\jdk-19.0.1\bin+`).
+
+You should now be able to run Java from the command prompt. Check to see if the version matches the one you installed, e.g.:
+
+ > java -version
+
+NOTE: If you need help setting Environment Variables in Windows, see e.g. https://www.java.com/en/download/help/path.html[the official Java help pages].
+
+==== MacOS
+Install OpenJDK using homebrew with the following command:
+
+ brew install openjdk
+
+NOTE: If you don't have homebrew or need help setting it up, please visit https://brew.sh/[the official homebrew site].
+
+=== TOMCAT
+The WOOL Web Service https://github.com/woolplatform/wool/releases/tag/v1.3.2[v1.3.2] and up requires Tomcat 10 to run.
+
+==== Windows
+* Visit the https://tomcat.apache.org/download-10.cgi[Apache Tomcat Downloads page] and download the latest version of Tomcat 10. Choose the 32-bit/64-bit Windows Service Installer.
+* Run the installer (e.g. `+apache-tomcat-10.1.5.exe+`), pay attention to the following:
+** When asked to "Choose Components", make sure to include the following:
+*** Check the box next to Tomcat > *Service Startup* so Tomcat is started automatically when the computer is started.
+*** Check the box next to *Host Manager*. This is needed to deploy web applications from the Gradle build file.
+** On the next screen, we should configure some items:
+*** At Tomcat Administrator Login fill in a user name (for example "admin") and a secure password.
+*** Set "Roles" to: `+admin-gui,manager-gui,admin-script,manager-script+`. The additional _script_ roles are needed to support automatic deployment of web services through a Gradle script.
+** On the next screen, provide the directory where your Java JDK is installed (e.g. `+C:\apps\jdk-19.0.1+`).
+** Finally, choose an installation folder for Tomcat, e.g. `+C:\apps\Tomcat 10.1.5+`.
+
+Next, we do some final configuration of the JDK location, Java options and Memory Size:
+
+* From the Windows start menu, open Monitor Tomcat. If you get a permission error, you may need to open the Tomcat folder in Windows Explorer first, e.g. `+C:\apps\Tomcat 10.1.5+`. The Tomcat monitor opens in the notification area of the task bar.
+* Open the Tomcat monitor from the task bar.
+* Open the tab Java.
+* Make sure the *Initial memory pool* and *Maximum memory pool* are set to some reasonable amount (e.g. 512 and 2048). If this is too low, the Java process may run out of memory while executing the WOOL Web Service. Click *Apply* and close the configurator.
+
+.The Tomcat Monitor - Java settings tab on Windows.
+image::webservice-setup-tutorial-0-tomcatproperties.png[]
+
+In the final step of the installation, when asked, start the Tomcat service.
+
+Verify the installation by opening a Web Browser and visiting `+http://localhost:8080/+`. You should see a webpage that says "If you're seeing this, you've successfully installed Tomcat. Congratulations!". Now, click on *Host Manager* and login using the admin credentials set earlier. You should be able to login and see the _Tomcat Virtual Host Manager_.
+
+==== MacOS
+* Type `brew install tomcat` to install the latest version of Tomcat 10 on your device.
+* Locate the tomcat configuration files (by default in `/usr/local/etc/tomcat`).
+* Edit the `tomcat-users.xml` file and define an admin user, e.g.
+
+ <user username="admin" password="<must-be-changed>" roles="admin-gui,manager-gui,admin-script,manager-script"/>
+
+* Restart tomcat using the `brew services restart tomcat` command.
+
+Verify the installation by opening a Web Browser and visiting `+http://localhost:8080/+`. You should see a webpage that says "If you're seeing this, you've successfully installed Tomcat. Congratulations!". Now, click on *Host Manager* and login using the admin credentials set earlier. You should be able to login and see the _Tomcat Virtual Host Manager_.
+
+== Download and Configure
+Once you have Java and Tomcat installed, we can proceed to downloading, and configuring the WOOL Web Service.
+
+* Clone the https://github.com/woolplatform/wool[wool] repository (branch: 'master') to your local machine, e.g.: `+<GITDIR>\wool\+`
+
+The web service is configured with this file that needs to be created:
+
+ <GITDIR>\wool\java\WoolWebService\gradle.properties
+
+The folder contains a sample properties file, which you can rename to "gradle.properties", and edit it:
+
+ <GITDIR>\wool\java\WoolWebService\gradle.sample.properties
+
+First, set the `woolConfigBaseUrl` to reflect our local deployment, e.g.:
+
+ woolconfigBaseUrl=http://localhost:8080/wool
+
+In order to set an appropriate value for the `+woolconfigJwtSecretKey+` you can use an online Base64 String generator, such as https://generate.plus/en/base64 (choose 128 for the length in bytes and click "Generate"). The output should be something like this:
+
+ woolconfigJwtSecretKey=Gz/QP51QcE694/ehuppfV4vSt3L9OfXtcl6WHy/8agce44DyzUoqoOJSI+gGEPusfYsMMK6TJTsL8z1/ADK232Jh9QE9tSVp1aDMduo3v8j1vrAgYTHq+whSJkl6uQfYIQF92FqgyJk9CMUC6SAw1h7EvdDaaRx9dmMXpsIRToo=
+
+Next, define the `woolconfigDataDir`, which is a directory where certain configuration files for the WOOL Web Service should be placed, and where log data is stored, e.g.
+
+ woolconfigDataDir=/users/username/wool/web-service/data
+
+Only authenticated users can access the WOOL Web Service API. The usernames and passwords are loaded from an XML file that should be placed in this configured data dir (`<DATADIR>\users.xml`).
+
+An example users.xml file can be found in `<GITDIR>\wool\java\WoolWebService\config\users.xml`. Change the default user and password, or add any additional users as you see fit.
+
+== Configuring an external variable service.
+
+The WOOL Web Service can be configured to automatically update all WOOL Variables that are used in dialogues through an external API. This is called an "External Variable Service". A dummy implementation of an External Variable Service is provided in the wool git repository. 
+
+If you wish to use this service, set the following variables. For the remainder of this tutorial, we assume to *not* use an external variable service.
+
+If this setting is set to `true`, the following also need to be configured:
+
+* `woolconfigExternalVariableServiceEnabled` should be set to `true`, if set to `false` no External Variable Service will be used.
+* `woolconfigExternalVariableServiceUrl` should point to where the external variable service can be called (e.g., `https://servlets.example.com/wool-external-var-service`).
+* `woolconfigExternalVariableServiceAPIVersion` should be set to the API version for the external variable service (e.g., `1`).
+* `woolconfigExternalVariableServiceUsername` should be set to a username that is configured in the External Variable Service.
+* `woolconfigExternalVariableServicePassword` should be set to the corresponding password as set in the External Variable Service.
+
+== Deploying the Web Service
+NOTE: Make sure that Tomcat is running before proceeding with this step.
+
+=== Gradle Configuration
+The web service is deployed with Gradle task `cargoRedeployRemote`. This Gradle task allows you to deploy the WOOL Web Service to a (local or remote) Tomcat server that has the Host Manager feature enabled. For now we will deploy to our locally running Tomcat server, which requires us to set the following parameters in `gradle.properties`:
+
+* `tomcatDeployPath=wool` - The path where the web service will run, make sure this matches the setting for `woolConfigBaseUrl`.
+* `remoteTomcatHost=localhost` - The tomcat host address, for now we will deploy to our local machine, so you can keep it as is. If you have an external server where you want to deploy to, you can change this host address.
+* `remoteTomcatPort=8080` - Choose the port as configured during the Tomcat installation. If you followed this tutorial, you can leave this as is.
+* `remoteTomcatUser=admin` - The administrator username for Tomcat Host as configured during the Tomcat installation.
+* `remoteTomcatPassword=SECRET` - The administrator password for Tomcat Host.
+
+=== Deploying
+After completing this configuration, open a Terminal/Command Prompt in `<GITDIR>\wool\java\WoolWebService` and enter this command:
+
+ > .\gradlew build cargoRedeployRemote
+
+If you want to make a clean build and deploy, then enter:
+
+ > .\gradlew clean build cargoRedeployRemote
+
+Logging is done using Logback (http://logback.qos.ch/). This is configured in `<GITDIR>\wool\java\WoolWebService\src\main\resources\logback.xml`. With this configuration, log files are written to the directory that you set in woolconfigDataDir in gradle.properties.
+
+After deploying you can access the Swagger interface at: `http://localhost:8080/wool/`, which should look something like this:
+
+.If deployed correctly, this is what you should be seeing - the Swagger API Documentation of the WOOL Web Service.
+image::webservice-setup-tutorial-1-swagger.png[]
+
+=== Troubleshooting
+If you cannot access the Swagger interface or the deployment showed errors, perform the following checks:
+
+* If the deployment did not show any errors:
+** Make sure your `woolconfigBaseUrl` is set to `http://localhost:8080/wool`? and the `tomcatDeployPath` is set to `wool`.
+* If the deployment did show errors:
+** Is your Tomcat running? If it is, going to `http://localhost:8080/manager/html` should result in a request for a username and password.
+** Are your Tomcat username and password correct? You can verify this by logging into the manager window at the URL in the previous step.
+** Check if your `gradle.properties` file has been configured correctly. (See notes above.)
+
+== What's next?
+Now that you have the WOOL Web Service running, it's time to start using it. As a next step we recommend checking the xref:tutorial-webservice-gettingstarted.adoc[Getting Started Tutorial].
+
+NOTE: If you found errors or have questions about this tutorial, please consider reporting an issue at https://github.com/woolplatform/wool-documentation or sending an email to info@woolplatform.eu.

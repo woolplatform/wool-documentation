@@ -1,0 +1,82 @@
+= Tutorial: How to author your first WOOL dialogue
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Tessa Beinema <t.c.beinema@utwente.nl>
+:description: The document's description.
+
+In this tutorial you will learn how to author a basic WOOL dialogue for use in an agent application (e.g. with the Agents United Platform).
+
+== Starting the desktop editor
+Pull or download the WOOL project from the WOOL GitHub repository. Set up the editor by following the instructions in the +ReadMe+ file (specifically those under the "WOOL Editor Desktop version" header).
+
+* Make sure you have a command line window opened in the +/woolplatform/html5/+ folder, by doing one of the following:
+** Start a command prompt or terminal window and navigate to the +/woolplatform/html5/+ folder.
+** Open the +/woolplatform/html5/+ folder in Windows Explorer, and while pressing your shift-key right-click next to the files. You then should then see an additional option: ‘Open PowerShell window here’ (about halfway down the list). A PowerShell window should appear when you click it.
+
+* In your window of choice, type “npm install” and wait for the installation to complete.
+* Then type “npm run start” to start the editor. This should make the editor appear.
+
+== Creating a new project
+At the top left in the editor, there should be three buttons. Click the "create new project" button. This should make the "create new project" screen appear.
+Enter a project name and choose the location where you want your WOOL scripts to be saved.
+
+image::authoring-first-dialogue-1.png[]
+
+Click "Next" and select "Basic language set".  In this tutorial we set "en (English)" as the Default Language.
+
+image::authoring-first-dialogue-2.png[]
+
+After setting the language, click "Finish" and then "Let’s go!".
+
+== Creating the first dialogue in your project
+
+Once you have finished setting up a new project, you should see the editing window. In that window, a dialogue called +start.wool+ should be shown. (If it does not show up in the file explorer on the left, try clicking the +en+ folder followed by pressing the "reload directory" button.)
+
+image::authoring-first-dialogue-3.png[]
+
+Then you create a new dialogue file in your project (+File -> New...+), it is wise to immediately save it. To do this, go to "File" and select "Save...". You will then see a notification that the file is saved under ‘unnamed.wool’. This is the standard name for all new wool files.  It is also good practice to immediately rename any new dialogue file that you create in your project.
+To rename a dialogue file, first click on "Reload directory" in the left pane to make the new WOOL file appear in your project’s file list. You can then drag that file to the +en+ folder if it is not already there. To rename the file, right-click on the +unnamed.wool+ file and click "Rename file".
+In this tutorial we will call our dialogue "introduction". Once you have renamed your file, you will notice that the name of the file in the editing pane has also changed (to +introduction.wool+ in this case).
+
+image::authoring-first-dialogue-4.png[]
+
+== Start writing
+
+Once you have set up the new dialogue file, you can start writing your dialogue. The xref:definitions:wool-language.adoc[WOOL Language Documentation] provides an overview of the available language features, but we will discuss the very basics below.
+Your window should show a dialogue step (node) with the name +Start+. In a WOOL dialogue, each dialogue step can contain something that one agent says and one or more response options for the user.
+If you double click the +Start+ node, the editing overlay will be shown. In this overlay, you can fill in the name of the agent (speaker), and this specific node (in this case automatically called +Start+).
+
+image::authoring-first-dialogue-5.png[]
+
+In our example introduction dialogue, we will call our agent +Bob+ and he will say +Hello, I’m Bob.+. We also define two possible responses (reply options) for the user. They can say: +Nice to meet you.+ or +Goodbye.+.
+A reply option is always defined in between double brackets (+[[ ]]+) and contains a reference to the name of the next dialogue step (in this case +NextStepName+). There should always be a pipe (+|+) between what the user can say and the name of the next step.
+
+image::authoring-first-dialogue-6.png[]
+
+As you see in the screenshot, the editing overlay indicates that there are errors in this node. This is because we have two reply options for the user, but they refer to a next dialogue step (+NextStepName+) that does not exist.
+Let’s create that next dialogue step. First, click next to the editing overlay to go back to the overview of all dialogue steps.
+
+image::authoring-first-dialogue-7.png[]
+
+Now, either right-click next to the existing node or press the "+ node" button. A new node will appear. As with the +Start+ node, you can double click this new node and edit its speaker, name and contents. In our example dialogue, we let Bob say +Nice to meet you too!+ and the user can say +Goodbye.+. We also rename this new dialogue step to +NextStepName+.
+
+image::authoring-first-dialogue-8.png[]
+
+We also create a node called +End+, with our agent +Bob+ as the speaker. The body of that node is empty.
+If the name of a node matches the name that a reply in another node refers to (in this case e.g. +NextStepName+ and +End+), the editor will draw an arrow between the nodes to show that they are connected.
+
+image::authoring-first-dialogue-9.png[]
+
+== Test the dialogue
+
+Finally, in this example, we will test our dialogue in the editor. To do this, hoover over the "Run"-button on the overview screen and select the "(re)start" option. You will now see an agent with a speech-bubble and reply options.
+
+image::authoring-first-dialogue-10.png[]
+
+The background and agent are randomly generated, so your agent and background will probably look different from the one in the example. At the lower left, you can change the agent and background with the "+" and "-" buttons.
+You can now test your dialogue by using the reply options. If you spot a mistake or would like to change something, you can go back to the editor with one of the two buttons at the lower left.
+
+That concludes this tutorial. Have fun!

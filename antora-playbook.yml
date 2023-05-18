@@ -1,0 +1,12 @@
+site:
+  title: WOOL Platform Documentation Hub
+  url: https://www.woolplatform.eu/docs/
+  start_page: wool-platform::index.adoc
+content:
+  sources:
+  - url: https://github.com/woolplatform/wool-documentation.git
+    branches: HEAD
+    start_path: docs
+ui:
+  bundle:
+    url: ./wool-ui/release/ui-bundle.zip

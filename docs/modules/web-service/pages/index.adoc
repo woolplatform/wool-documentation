@@ -1,0 +1,106 @@
+= WOOL Web Service Documentation
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+Harm op den Akker
+:description: Documentation for the WOOL Web Service
+
+== Overview
+The WOOL Web Service is a https://spring.io/projects/spring-boot[JAVA Spring Boot Application] that can be deployed as a web service. It acts as a wrapper around the WOOL Core Library, offering an API that allows you to create client-server dialogue applications. A typical, simple architecture is shown in the Figure below.
+
+.The overal WOOL Architecture. The Web Service acts as a REST API wrapper around the WOOL Core, allowing WOOL Clients to render remotely executed dialogues.
+image::wws-architecture.png[]
+
+The components described in the Architecture above are described as follows (from left to right):
+
+* *WOOL Client* - Your client application that connects to the WWS in order to render remotely executed WOOL dialogues.
+* *WOOL Web Service* - the Java Spring Boot Application that can be deployed in a web server. It provides simple user management, and a REST API.
+** *WWS REST API* - a set of REST end-points for Authentication, Executing WOOL dialogues, and managing WOOL Variables.
+** *WOOL Core* - the "core" Java Library that contains the software for parsing and executing .wool scripts. This is a collection of POJO's (Plain Old Java Objects) that can be embedded into any Java or Android application.
+* *External Variable Service* - Your (optional) web service that may be used to provide just-in-time updates to WOOL Variables.
+
+Given the architecture above, a typical scenario for using WOOL in a client-server deployment is as follows. You deploy a WOOL Web Service that has a collection of .wool scripts embedded. You then write a client application that connects to the WOOL Web Server, allowing users to login, start-, and progress dialogues. If your .wool dialogues include WOOL Variables that need to be updated from an external source, implement and deploy your own External Variable Service and connect this to your WWS deployment.
+
+== WOOL Web Service Component
+The WOOL Web Service source code is part of the main "wool" repository at https://github.com/woolplatform/wool[github.com/woolplatform/wool]. Specifically, it may be found in the https://github.com/woolplatform/wool/tree/master/java/WoolWebService[/java/WoolWebService] folder of the repository.
+
+The provided `build.gradle` file may be used to build and deploy the WOOL Web Service to a running https://tomcat.apache.org/download-10.cgi[Tomcat 10] instance. A detailed installation tutorial is provided here: xref:tutorials:tutorial-webservice-installation.adoc[WOOL Web Service - Installation].
+
+After having successfully deployed a WOOL Web Service, you can start exploring its functionalities through the provided https://swagger.io/[Swagger] pages.
+
+TODO: Add screenshot of Swagger page for WWS.
+
+=== Dialogue Execution
+A typical workflow for a client application interacting with the WOOL Web Service is a follows:
+
+. Call the `/auth/login` end-point, providing a username and password to authenticate a user and obtain a https://jwt.io/[JSON Web Token] (JWT).
+. Store the JWT, and include in the header (`name`: `X-Auth-Token`, `value`: `<your-jwt>`) for all subsequent calls.
+. Start the execution of a dialogue, by calling the `/dialogue/start` end-point, providing `dialogueName`, `language` and `timeZone`.
+. Render the resulting JSON object as a dialogue user interface to the user, and store the `loggedDialogueId` and `loggedInteractionIndex`.
+. When the user selects a reply, call the `/dialogue/progress` end-point, providing the previously memorized `loggedDialogueId` and `loggedInteractionIndex`, as well as the selected `replyId`.
+. The result is a JSON object with the same structure as received in step 4, so render, rinse, and repeat...
+
+.Sequence diagram for a typical User to Client to Server scenario of authenticating and executing dialogues with the WOOL Web Service
+image::wws-api-sequence.png[]
+
+=== Working with Variables
+WOOL Variables are used in .wool scripts to create dynamic dialogue flow, and include flavourful personalisations. These WOOL Variables can be set and used inside the dialogue scripts themselves, as in the example below:
+
+[source,xml]
+----
+<<set $playerName = "Bob">>
+
+Hello $playerName, how are you doing?
+
+[[I'm fine.|PlayerIsFine]]
+[[I'm sad.|PlayerIsSad]]
+----
+
+However, as in the example, it doesn't always make sense to set the values for WOOL Variables in the dialogue scripts themselves. Instead, these values might originate from another part of your client application. Imagine that your client application is a game that includes a user interface where players can insert their name. When a player does this, the value should be communicated to WOOL, so that the $playerName variable may be used in dialogues.
+
+The WOOL Web Service offers the following 2 end-points for sending WOOL Variables values to the service:
+
+* `/variables/set-variable` - allowing you to set a single WOOL Variable by providing a `name' and a `value'.
+* `/variables/set-variables` - allowing you to set a number of WOOL Variables simultaneously by including a JSON payload in the body.
+
+Using these, you can inform WOOL about Variables who's values are generated through any part of your client application. The other way around, your client application can also ask the WOOL Web Service about WOOL Variable values, using the following end-point:
+
+* `/variables/get-variables` - allows you to ask for all known WOOL Variables for a user, or a list of specific WOOL Variables (by providing a comma-separated list of variable names).
+
+Another way of making sure that WOOL has up-to-date values for WOOL Variables, is by using a <<WOOL External Variable Service>>, as explained below.
+
+=== Authentication
+As explained in the <<Dialogue Execution>> step, the first thing you need to do before working with the WOOL Web Service is to authenticate. 
+
+The WOOL Web Service supports two different "modes" of authenticating. Users that are defined in the users.xml configuration file can  be given a _role_ which can either be "user" or "admin" (if you don't specify, the role "user" will be assumed).
+
+When you authenticate with the WOOL Web Service (using the */auth/login* end-point) as a regular "user", you can perform actions (start dialogues, set variables, etc) on behalf of that authenticated user. However, when you authenticate as a user that has the "admin" role, you can control dialogues (start, progress, cancel, etc) and data (set and retrieve variables) for any "wool user" you specify using the optional `woolUserId` parameters that are a part of all API end-points.
+
+This method of authentication may be used e.g. in a scenario where "clients" don't directly interact with the WOOL Web Service, but instead connect through a trusted web component that manages a single connection (see Figure below).
+
+.The two modes of authentication. Left: multiple clients authenticate directly "as themselves" with the WWS. Right: a trusted server component authenticates as an "admin" user.
+image::wws-user-vs-admin-authentication.png[]
+
+== WOOL External Variable Service
+A WOOL External Variable Service is a web service that may be used by a WOOL Web Service deployment to act as an external source of information for WOOL Variable data. The WOOL Web Service itself keeps track of all WOOL Variables that are set for every individual user. For example, if a WOOL Variable is set in a dialogue using [.pink]#`\<<set $variableName = "value">>`# that value is stored. If your WOOL scripts only uses WOOL Variables that are set within the dialogue itself, the WOOL Web Service alone will handle everything. 
+
+However, if your dialogue contains a statement such as _The temperature outside is `$temperatureAtUserLocation` degrees._, the value for `$temperatureAtUserLocation` is something that would likely need to be fetched from an external component - that is where the WOOL External Variable Service comes in.
+
+Every time the WOOL Web Service starts executing a dialogue script, it collects a list of all the WOOL Variables used within that dialogue. The WOOL Web Service may (or may not) already have known values for these variables, but in any case, it will send a request to the External Variable Service to check whether any of the variables require updating. Your specific implementation of the External Variable Service needs to take care of these variable updates. For example, your variable service could in turn call a 3rd party weather API to retrieve the temperature at the user's location, and return this value to the WOOL Web Service.
+
+This flow is outlined in the sequence diagram below:
+
+.Sequence diagram for the flow of operations between a Client, the WOOL Web Service, an External Variable Service, and a 3rd Party API
+image::wws-ext-var-service-sequence.png[]
+
+NOTE: It is worthwhile to make sure that the External Variable Service answers the request for variable updates quickly, because any delay will delay the starting of dialogue execution in the WOOL Web Service - which will negatively impact your end-user's experience. Apply caching, and make use of the provided `updatedTime` parameter that is passed along with each WOOL Variable, to make quick judgements whether a variable needs to be updated at all.
+
+== Tutorials
+If you're ready to start experimenting with your own WOOL Web Service, make sure to check out the relevant Tutorials:
+
+* xref:tutorials:tutorial-webservice-installation.adoc[WOOL Web Service - Installation].
+* xref:tutorials:tutorial-webservice-gettingstarted.adoc[WOOL Web Service - Getting Started].
+
+NOTE: If you found errors or have questions about this page, please consider reporting an issue at https://github.com/woolplatform/wool-documentation or sending an email to info@woolplatform.eu.

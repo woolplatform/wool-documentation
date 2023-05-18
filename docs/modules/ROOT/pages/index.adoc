@@ -1,0 +1,25 @@
+= WOOL Platform Documentation
+:imagesdir: ../images
+:sectnums:
+Harm op den Akker <hopdenakker@fruittreelabs.com>
+Tessa Beinema <t.c.beinema@utwente.nl>
+:description: The document's description.
+
+Welcome to the WOOL Platform Documentation Hub. On this site you will find documentation about the WOOL Platform, including the WOOL Language and the various available tools.
+
+NOTE: Did you find an error? Or you didn't find what you were looking for? Please send your feedback to info@woolplatform.eu
+
+The main content of this Documentation Hub can be accessed through the left-hand menu, and includes the following:
+
+ * xref:language:index.adoc[WOOL Language Index]
+ * xref:tutorials:index.adoc[WOOL Tutorials]
+ * xref:web-service:index.adoc[WOOL Web Service]
+
+== Release Notes
+
+=== v1.3.2 (February 15, 2023)
+See the https://github.com/woolplatform/wool/releases/tag/v1.3.2[GitHub Release Tag v1.3.2].
+
+This v1.3.2 Git Release marks the start of a more structured way of releasing updates to the WOOL Platform software. As such, we do not publish detailed "Release Notes", but instead will describe future releases as a comparison to this baseline.
+
+NOTE: If you found errors or have questions about this page, please consider reporting an issue at https://github.com/woolplatform/wool-documentation or sending an email to info@woolplatform.eu.

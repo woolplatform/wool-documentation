@@ -1,0 +1,7 @@
+name: wool-platform
+title: WOOL Platform
+version: dev
+nav:
+- modules/language/nav.adoc
+- modules/tutorials/nav.adoc
+- modules/web-service/nav.adoc

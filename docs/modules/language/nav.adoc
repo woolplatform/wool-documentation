@@ -1,0 +1,2 @@
+* xref:index.adoc[WOOL Language Index]
+** xref:wool-language.adoc[WOOL Language Overview]

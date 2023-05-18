@@ -1,0 +1,15 @@
+= WOOL Language Index
+Harm op den Akker <hopdenakker@fruittreelabs.com>
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:imagesdir: ../images
+:sectnums:
+:description: Index page for WOOL Definitions documentation.
+
+== Introduction
+
+=== WOOL Language
+At its core, WOOL is similar to a programming or "scripting" language. The xref:wool-language.adoc[WOOL Language] is defined by a set of rules that dictates what a validly specified WOOL Dialogue is. It tells you how to specify _Statements_ that can be uttered by _Agents_, and how to define various _Reply_ options.
+
+xref:wool-language.adoc[Click here to read the full WOOL Language documentation...]
